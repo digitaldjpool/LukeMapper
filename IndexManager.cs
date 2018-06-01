@@ -23,7 +23,7 @@ namespace LukeMapper
         public static readonly Version Version = Version.LUCENE_29;
 
         private static readonly ConcurrentDictionary<string, Singlet> _singlets = new ConcurrentDictionary<string, Singlet>();
-        
+
         public static Singlet Of(string indexName)
         {
             return _singlets.GetOrAdd(indexName, (s) => new Singlet(s));
@@ -31,7 +31,6 @@ namespace LukeMapper
 
         public sealed class Singlet
         {
-
             private static object syncRoot = new Object();
 
             private IndexWriter _writer;
@@ -52,7 +51,10 @@ namespace LukeMapper
 
                 return new IndexWriter(dir, new StandardAnalyzer(Version), !IndexReader.IndexExists(dir), IndexWriter.MaxFieldLength.UNLIMITED);
             }
-            private Singlet() { }
+
+            private Singlet()
+            {
+            }
 
             internal Singlet(string indexName)
             {
@@ -68,9 +70,9 @@ namespace LukeMapper
             {
                 lock (syncRoot)
                 {
-                    if (_searcher != null && !_searcher.GetIndexReader().IsCurrent() && _activeSearches == 0)
+                    if (_searcher != null && !_searcher.IndexReader.IsCurrent() && _activeSearches == 0)
                     {
-                        _searcher.Close();
+                        _searcher.Dispose();
                         _searcher = null;
                     }
                     if (_searcher == null)
@@ -95,9 +97,9 @@ namespace LukeMapper
             {
                 lock (syncRoot)
                 {
-                    if (_searcher != null && !_searcher.GetIndexReader().IsCurrent() && _activeSearches == 0)
+                    if (_searcher != null && !_searcher.IndexReader.IsCurrent() && _activeSearches == 0)
                     {
-                        _searcher.Close();
+                        _searcher.Dispose();
                         _searcher = null;
                     }
                     if (_searcher == null)
@@ -118,13 +120,13 @@ namespace LukeMapper
                 return results;
             }
 
-            public IEnumerable<T> Query<T>(Query query, int n)
+            public LukeSearchResult<T> Query<T>(Query query, int n)
             {
                 lock (syncRoot)
                 {
-                    if (_searcher != null && !_searcher.GetIndexReader().IsCurrent() && _activeSearches == 0)
+                    if (_searcher != null && !_searcher.IndexReader.IsCurrent() && _activeSearches == 0)
                     {
-                        _searcher.Close();
+                        _searcher.Dispose();
                         _searcher = null;
                     }
                     if (_searcher == null)
@@ -132,7 +134,7 @@ namespace LukeMapper
                         _searcher = new IndexSearcher((_writer ?? (_writer = CreateWriter(indexName))).GetReader());
                     }
                 }
-                IEnumerable<T> results;
+                LukeSearchResult<T> results;
                 Interlocked.Increment(ref _activeSearches);
                 try
                 {
@@ -144,7 +146,6 @@ namespace LukeMapper
                 }
                 return results;
             }
-
 
             public void Write<T>(IEnumerable<T> entities)
             {
@@ -167,7 +168,7 @@ namespace LukeMapper
                         int writers = Interlocked.Decrement(ref _activeWrites);
                         if (writers == 0)
                         {
-                            _writer.Close();
+                            _writer.Dispose();
                             _writer = null;
                         }
                     }
@@ -190,7 +191,6 @@ namespace LukeMapper
                     {
                         _writer.AddDocument(document, new StandardAnalyzer(Version));
                     }
-
                 }
                 finally
                 {
@@ -199,7 +199,7 @@ namespace LukeMapper
                         int writers = Interlocked.Decrement(ref _activeWrites);
                         if (writers == 0)
                         {
-                            _writer.Close();
+                            _writer.Dispose();
                             _writer = null;
                         }
                     }
@@ -226,7 +226,7 @@ namespace LukeMapper
                         int writers = Interlocked.Decrement(ref _activeWrites);
                         if (writers == 0)
                         {
-                            _writer.Close();
+                            _writer.Dispose();
                             _writer = null;
                         }
                     }
@@ -249,7 +249,6 @@ namespace LukeMapper
                     {
                         _writer.UpdateDocument(getIdentiferTerm(document), document, new StandardAnalyzer(Version));
                     }
-
                 }
                 finally
                 {
@@ -258,7 +257,7 @@ namespace LukeMapper
                         int writers = Interlocked.Decrement(ref _activeWrites);
                         if (writers == 0)
                         {
-                            _writer.Close();
+                            _writer.Dispose();
                             _writer = null;
                         }
                     }
@@ -269,17 +268,15 @@ namespace LukeMapper
             {
                 lock (syncRoot)
                 {
-                    _searcher.Close();
+                    _searcher.Dispose();
                     _searcher.Dispose();
                     _searcher = null;
 
-                    _writer.Close();
+                    _writer.Dispose();
                     _writer.Dispose();
                     _writer = null;
                 }
             }
         }
-
     }
-
 }

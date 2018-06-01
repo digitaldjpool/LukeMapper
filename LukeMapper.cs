@@ -4,18 +4,15 @@
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
     You may obtain a copy of the License at
-    
+
        http://www.apache.org/licenses/LICENSE-2.0
-    
+
     Unless required by applicable law or agreed to in writing, software
     distributed under the License is distributed on an "AS IS" BASIS,
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
 */
-
-
-
 
 using System;
 using System.Collections.Generic;
@@ -56,8 +53,9 @@ namespace LukeMapper
 
         //Cached references to useful mappings
         private static readonly MethodInfo GetFieldValue = typeof(Document).GetMethod("Get", BindingFlags.Instance | BindingFlags.Public);
+
         private static readonly MethodInfo IntTryParse = typeof(Int32).GetMethod("TryParse", new[] { typeof(string), typeof(int).MakeByRefType() });
-        private static readonly MethodInfo IntParse = typeof(Int32).GetMethod("Parse", new[] { typeof(string)});
+        private static readonly MethodInfo IntParse = typeof(Int32).GetMethod("Parse", new[] { typeof(string) });
         private static readonly MethodInfo LongTryParse = typeof(Int64).GetMethod("TryParse", new[] { typeof(string), typeof(long).MakeByRefType() });
         private static readonly MethodInfo IsNullOrEmpty = typeof(String).GetMethod("IsNullOrEmpty", new[] { typeof(string) });
         private static readonly MethodInfo LukeMapperGetDateTime = typeof(LukeMapper).GetMethod("GetDateTime");
@@ -67,26 +65,30 @@ namespace LukeMapper
 
         //Cached references useful for writes
         private static readonly Type DocumentType = typeof(Document);
+
         private static readonly ConstructorInfo DocumentCtor = typeof(Document).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
         private static readonly ConstructorInfo FieldCtor = typeof(Field).GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(string), typeof(string), typeof(Field.Store), typeof(Field.Index) }, null);
         private static readonly MethodInfo IntToString = typeof(Int32).GetMethod("ToString", Type.EmptyTypes);
         private static readonly MethodInfo ObjectToString = typeof(Object).GetMethod("ToString", Type.EmptyTypes);
         private static readonly MethodInfo LongToString = typeof(Int64).GetMethod("ToString", Type.EmptyTypes);
-        private static readonly MethodInfo DocumentAddField = typeof(Document).GetMethod("Add", new[] { typeof(Fieldable) });
+
+        //private static readonly MethodInfo DocumentAddField = typeof(Document).GetMethod("Add", new[] { typeof(Fieldable) });
         private static readonly MethodInfo LukeMapperToDateString = typeof(LukeMapper).GetMethod("ToDateString");
-        private static readonly MethodInfo StringGenericJoin = typeof (string)
+
+        private static readonly MethodInfo StringGenericJoin = typeof(string)
             .GetMethods()
             .Where(m => m.Name == "Join")
             .Select(m => new
-                {
-                    Method = m,
-                    Params = m.GetParameters(),
-                    Args = m.GetGenericArguments()
-                })
+            {
+                Method = m,
+                Params = m.GetParameters(),
+                Args = m.GetGenericArguments()
+            })
             .Where(x => x.Params.Length == 2
                         && x.Args.Length == 1)
             .Select(x => x.Method)
             .First();
+
         #endregion
 
         #region Query and Write Caching
@@ -95,14 +97,16 @@ namespace LukeMapper
         /// Called if the query cache is purged via PurgeQueryCache
         /// </summary>
         public static event EventHandler QueryCachePurged;
+
         private static void OnQueryCachePurged()
         {
             var handler = QueryCachePurged;
             if (handler != null) handler(null, EventArgs.Empty);
         }
 
-        static readonly ConcurrentDictionary<Identity, DeserializerCacheInfo> _queryCache = new ConcurrentDictionary<Identity, DeserializerCacheInfo>();
-        static readonly ConcurrentDictionary<Identity, object> _writeCache = new ConcurrentDictionary<Identity, object>();
+        private static readonly ConcurrentDictionary<Identity, DeserializerCacheInfo> _queryCache = new ConcurrentDictionary<Identity, DeserializerCacheInfo>();
+        private static readonly ConcurrentDictionary<Identity, object> _writeCache = new ConcurrentDictionary<Identity, object>();
+
         private static void SetQueryCache(Identity key, DeserializerCacheInfo value)
         {
             if (Interlocked.Increment(ref collect) == COLLECT_PER_ITEMS)
@@ -111,6 +115,7 @@ namespace LukeMapper
             }
             _queryCache[key] = value;
         }
+
         private static void SetWriteCache<T>(Identity key, SerializerCacheInfo<T> value)
         {
             if (Interlocked.Increment(ref collect) == COLLECT_PER_ITEMS)
@@ -134,7 +139,6 @@ namespace LukeMapper
                     }
                 }
             }
-
             finally
             {
                 Interlocked.Exchange(ref collect, 0);
@@ -169,7 +173,7 @@ namespace LukeMapper
         }
 
         /// <summary>
-        /// Purge the query cache 
+        /// Purge the query cache
         /// </summary>
         public static void PurgeQueryCache()
         {
@@ -178,21 +182,36 @@ namespace LukeMapper
             OnQueryCachePurged();
         }
 
-
-        class DeserializerCacheInfo
+        private class DeserializerCacheInfo
         {
             public Func<Document, object> Deserializer { get; set; }
             private int hitCount;
-            public int GetHitCount() { return Interlocked.CompareExchange(ref hitCount, 0, 0); }
-            public void RecordHit() { Interlocked.Increment(ref hitCount); }
+
+            public int GetHitCount()
+            {
+                return Interlocked.CompareExchange(ref hitCount, 0, 0);
+            }
+
+            public void RecordHit()
+            {
+                Interlocked.Increment(ref hitCount);
+            }
         }
 
-        class SerializerCacheInfo<T>
+        private class SerializerCacheInfo<T>
         {
             public Func<T, Document> Serializer { get; set; }
             private int hitCount;
-            public int GetHitCount() { return Interlocked.CompareExchange(ref hitCount, 0, 0); }
-            public void RecordHit() { Interlocked.Increment(ref hitCount); }
+
+            public int GetHitCount()
+            {
+                return Interlocked.CompareExchange(ref hitCount, 0, 0);
+            }
+
+            public void RecordHit()
+            {
+                Interlocked.Increment(ref hitCount);
+            }
         }
 
         private static DeserializerCacheInfo GetDeserializerCacheInfo(Identity identity)
@@ -234,15 +253,15 @@ namespace LukeMapper
 
         /// <summary>
         /// This deserializes into a dynamic object (essentially a dictionary)
-        /// This is much less useful than in the equivalent dynamic object for RDBMS querying, 
+        /// This is much less useful than in the equivalent dynamic object for RDBMS querying,
         /// since Lucene stores everything as strings.
-        /// 
+        ///
         /// I've simply kept this here as an API since I think it has a convenient and clean syntax
         /// over Lucene's document.Get("") etc.
         /// </summary>
         private static Func<Document, object> GetDynamicDeserializer(IndexSearcher searcher)
         {
-            var names = searcher.GetIndexReader().GetFieldNames(IndexReader.FieldOption.ALL).ToList();
+            var names = searcher.IndexReader.GetFieldNames(IndexReader.FieldOption.ALL).ToList();
             var fieldCount = names.Count;
 
             return
@@ -252,7 +271,7 @@ namespace LukeMapper
                     foreach (var name in names)
                     {
                         var tmp = d.Get(name);
-                        if(!string.IsNullOrEmpty(tmp))
+                        if (!string.IsNullOrEmpty(tmp))
                         {
                             row[name] = tmp;
                         }
@@ -264,7 +283,7 @@ namespace LukeMapper
 
         /// <summary>
         /// Here is where most of the magic happens.
-        /// 
+        ///
         /// Given an IndexSearcher and a Type to map the index to, it will create and return a
         /// function mapping a document to the specified Type
         /// </summary>
@@ -282,7 +301,6 @@ namespace LukeMapper
             //var dm = builder.DefineMethod(string.Format("Deserialize{0}", Guid.NewGuid()), MethodAttributes.Public, typeof(object), new[] { typeof(Document) });
             //debug only
 
-
             var dm = new DynamicMethod(string.Format("Deserialize{0}", Guid.NewGuid()), type, new[] { typeof(Document) }, true);
 
             var il = dm.GetILGenerator();
@@ -293,7 +311,7 @@ namespace LukeMapper
             var properties = GetSettableProps(type);
             var fields = GetSettableFields(type);
 
-            var names = searcher.GetIndexReader().GetFieldNames(IndexReader.FieldOption.ALL);
+            var names = searcher.IndexReader.GetFieldNames(IndexReader.FieldOption.ALL);
 
             var ctor = type.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
             if (ctor == null)
@@ -330,7 +348,7 @@ namespace LukeMapper
                     luceneFieldName = names.FirstOrDefault(s => s.Equals(property.Name, StringComparison.Ordinal)) ??
                                       names.FirstOrDefault(s => s.Equals(property.Name, StringComparison.OrdinalIgnoreCase));
                 }
-                
+
                 if (luceneFieldName == null)
                 {
                     continue; // field does not exist in lucene index
@@ -343,7 +361,6 @@ namespace LukeMapper
                 }
                 else
                 {
-
                     var memberType = property.Type;
 
                     var nullableType = Nullable.GetUnderlyingType(memberType);
@@ -364,13 +381,11 @@ namespace LukeMapper
 
                         il.Emit(OpCodes.Brtrue_S, breakoutLabel);
 
-
                         EmitNullType(il, nullableType, localString, breakoutLabel);
 
                         var nullCtor = memberType.GetConstructor(new[] { nullableType });
                         il.Emit(OpCodes.Newobj, nullCtor);
                         il.Emit(OpCodes.Callvirt, property.Setter);
-
 
                         il.MarkLabel(breakoutLabel);
                     }
@@ -379,7 +394,6 @@ namespace LukeMapper
                         EmitProp(il, luceneFieldName, property);
                     }
                 }
-
             }
 
             foreach (var field in fields)
@@ -424,13 +438,11 @@ namespace LukeMapper
 
                     il.Emit(OpCodes.Brtrue_S, breakoutLabel);
 
-
                     EmitNullType(il, nullableType, localString, breakoutLabel);
 
                     var nullCtor = memberType.GetConstructor(new[] { nullableType });
                     il.Emit(OpCodes.Newobj, nullCtor);
                     il.Emit(OpCodes.Stfld, field);
-
 
                     il.MarkLabel(breakoutLabel);
                 }
@@ -448,9 +460,8 @@ namespace LukeMapper
             //assemblyBuilder.Save(assemblyName.Name + ".dll");
             //debug only
 
-
             return (Func<Document, object>)dm.CreateDelegate(typeof(Func<Document, object>));
-            //return null;
+            return null;
         }
 
         private static void EmitDelimitedPropOrField(ILGenerator il, LukeDelimitedAttribute delimitedAttr, LukeMapperAttribute classAttr, PropInfo prop = null, System.Reflection.FieldInfo field = null)
@@ -463,7 +474,6 @@ namespace LukeMapper
                 // no prop OR null specified
                 throw new Exception("argument 'prop' or 'field' is missing");
             }
-
 
             var enumerableType = type.GetInterfaces()
                                      .Where(t => t.IsGenericType)
@@ -479,8 +489,7 @@ namespace LukeMapper
 
             if (!SupportedTypes.Contains(innerType.FullName))
             {
-
-                // innerType is not an allowed 
+                // innerType is not an allowed
                 throw new Exception(string.Format("The type `{0}` is not supported for Delimited lists. please use a `CustomDeserializer` method instead.", innerType.FullName));
             }
 
@@ -511,10 +520,10 @@ namespace LukeMapper
             il.Emit(OpCodes.Ldstr, lukeAttr != null && lukeAttr.FieldName != null ? lukeAttr.FieldName : prop.Name);
             il.Emit(OpCodes.Callvirt, GetFieldValue);
 
-            var local = il.DeclareLocal(typeof (string[]));
+            var local = il.DeclareLocal(typeof(string[]));
 
             il.Emit(OpCodes.Ldc_I4_1);
-            il.Emit(OpCodes.Newarr, typeof (string));
+            il.Emit(OpCodes.Newarr, typeof(string));
 
             il.Emit(OpCodes.Stloc_S, local);
             il.Emit(OpCodes.Ldloc_S, local);
@@ -524,7 +533,7 @@ namespace LukeMapper
 
             il.Emit(OpCodes.Stelem_Ref);
             il.Emit(OpCodes.Ldloc_S, local);
-            
+
             il.Emit(OpCodes.Ldc_I4_0); // this is StringSplitOptions.None i believe
 
             il.Emit(OpCodes.Callvirt, StringSplit);
@@ -534,8 +543,8 @@ namespace LukeMapper
             il.Emit(OpCodes.Ldftn, IntParse);
 
             var ctor =
-                typeof (Func<,>)
-                    .MakeGenericType(new[] { typeof (string), innerType })
+                typeof(Func<,>)
+                    .MakeGenericType(new[] { typeof(string), innerType })
                     .GetConstructor(new[] { typeof(object), typeof(IntPtr) });
             if (ctor == null)
             {
@@ -544,14 +553,13 @@ namespace LukeMapper
 
             il.Emit(OpCodes.Newobj, ctor);
 
-            var selectMethod = typeof (Enumerable)
+            var selectMethod = typeof(Enumerable)
                 .GetMethods()
                 .First(m => m.Name == "Select")
-                .MakeGenericMethod(new[] {typeof (string), innerType}); // select method.. string[] -> innerType[]
-
+                .MakeGenericMethod(new[] { typeof(string), innerType }); // select method.. string[] -> innerType[]
 
             //TODO: call tolist etc...
-            
+
             if (prop != null)
             {
                 il.Emit(OpCodes.Callvirt, prop.Setter);
@@ -621,7 +629,6 @@ namespace LukeMapper
 
         private static void EmitCustomDeserializedTypeProp(ILGenerator il, PropInfo prop, MethodInfo deserializer, LukeMapperAttribute classAttr)
         {
-
             var lukeAttr = prop.PropertyInfo.GetCustomAttributes(typeof(LukeAttribute), true).FirstOrDefault() as LukeAttribute;
 
             if ((lukeAttr != null && lukeAttr.Ignore) || (classAttr.IgnoreByDefault && lukeAttr == null))
@@ -633,12 +640,10 @@ namespace LukeMapper
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldstr, lukeAttr != null && lukeAttr.FieldName != null ? lukeAttr.FieldName : prop.Name);
 
-
             il.Emit(OpCodes.Callvirt, GetFieldValue);
             il.Emit(OpCodes.Call, deserializer);
 
             il.Emit(OpCodes.Callvirt, prop.Setter);
-
         }
 
         private static void EmitField(ILGenerator il, string name, System.Reflection.FieldInfo field)
@@ -697,11 +702,11 @@ namespace LukeMapper
                     il.Emit(OpCodes.Ldstr, name);
                     il.Emit(OpCodes.Callvirt, GetFieldValue);
 
-                    var s = il.DeclareLocal(typeof (string));
+                    var s = il.DeclareLocal(typeof(string));
 
                     il.Emit(OpCodes.Stloc, s);
                     il.Emit(OpCodes.Ldloc, s);//
-                    il.Emit(OpCodes.Call,IsNullOrEmpty);
+                    il.Emit(OpCodes.Call, IsNullOrEmpty);
 
                     var next = il.DefineLabel();
 
@@ -711,19 +716,17 @@ namespace LukeMapper
                     il.Emit(OpCodes.Ldc_I4_0);
                     il.Emit(OpCodes.Call, StringGetChars);
                     il.Emit(OpCodes.Stfld, field);
-                    
+
                     il.MarkLabel(next);
                     break;
+
                 default:
                     return;
             }
-
-            
         }
-        
+
         private static void EmitProp(ILGenerator il, string name, PropInfo prop)
         {
-
             switch (prop.Type.FullName)
             {
                 case "System.String":
@@ -734,11 +737,12 @@ namespace LukeMapper
                     il.Emit(OpCodes.Callvirt, GetFieldValue);
                     il.Emit(OpCodes.Callvirt, prop.Setter);
                     break;
+
                 case "System.Int32":
-                    var lb = il.DeclareLocal(typeof (int));
-                    
+                    var lb = il.DeclareLocal(typeof(int));
+
                     il.Emit(OpCodes.Ldarg_0);
-                    il.Emit(OpCodes.Ldstr, prop.Name);
+                    il.Emit(OpCodes.Ldstr, name);
                     il.Emit(OpCodes.Callvirt, GetFieldValue);
                     il.Emit(OpCodes.Ldloca_S, lb);
                     il.Emit(OpCodes.Call, IntTryParse);
@@ -748,9 +752,10 @@ namespace LukeMapper
                     il.Emit(OpCodes.Callvirt, prop.Setter);
 
                     break;
+
                 case "System.Int64":
-                    var lb64 = il.DeclareLocal(typeof (long));
-                    
+                    var lb64 = il.DeclareLocal(typeof(long));
+
                     il.Emit(OpCodes.Ldarg_0);
                     il.Emit(OpCodes.Ldstr, prop.Name);
                     il.Emit(OpCodes.Callvirt, GetFieldValue);
@@ -762,6 +767,7 @@ namespace LukeMapper
                     il.Emit(OpCodes.Callvirt, prop.Setter);
 
                     break;
+
                 case "System.Boolean":
                     il.Emit(OpCodes.Ldloc_0);// [target]
                     il.Emit(OpCodes.Ldarg_0);
@@ -802,6 +808,7 @@ namespace LukeMapper
 
                     il.MarkLabel(next);
                     break;
+
                 default:
                     return;
             }
@@ -829,7 +836,6 @@ namespace LukeMapper
             //var dm = builder.DefineMethod(string.Format("Serialize{0}", Guid.NewGuid()), MethodAttributes.Public | MethodAttributes.Static, DocumentType, new[] { type });
             //debug only
 
-
             var dm = new DynamicMethod(
                 string.Format("Serialize{0}", Guid.NewGuid()),
                 DocumentType,
@@ -844,12 +850,9 @@ namespace LukeMapper
             var classAttr = type.GetCustomAttributes(typeof(LukeMapperAttribute), true).FirstOrDefault() as LukeMapperAttribute ??
                             new LukeMapperAttribute();
 
-
-
             il.DeclareLocal(DocumentType);
             il.Emit(OpCodes.Newobj, DocumentCtor);
             il.Emit(OpCodes.Stloc_0); //stack is [document]
-
 
             var serializers =
                 type.GetMethods()
@@ -860,107 +863,6 @@ namespace LukeMapper
                     })
                     .Where(s => s.SerializerAttribute != null)
                     .ToList();
-
-
-
-            foreach (var prop in properties)
-            {
-                var delimitedAttr =
-                    (LukeDelimitedAttribute)prop.PropertyInfo.GetCustomAttributes(typeof (LukeDelimitedAttribute), true).FirstOrDefault();
-                if (delimitedAttr != null)
-                {
-                    EmitDelimitedPropOrFieldToDocument(il, delimitedAttr, classAttr, prop: prop);
-                    continue;
-                } 
-
-                var customSerializer = serializers.FirstOrDefault(ser => ser.SerializerAttribute.FieldName == prop.Name);
-                if (customSerializer != null)
-                {
-                    EmitCustomSerializedTypeProp(il, prop, customSerializer.Method, classAttr);
-                    continue;
-                }
-
-                EmitPropToDocument(il, prop, classAttr);
-            }
-            foreach (var field in fields)
-            {
-                var delimitedAttr =
-                    (LukeDelimitedAttribute)field.GetCustomAttributes(typeof(LukeDelimitedAttribute), true).FirstOrDefault();
-                if (delimitedAttr != null)
-                {
-                    //TODO:
-                    //EmitDelimitedPropOrFieldToDocument(il, delimitedAttr, classAttr, field: field);
-                    continue;
-                }
-
-                var customSerializer = serializers.FirstOrDefault(ser => ser.SerializerAttribute.FieldName == field.Name);
-                if (customSerializer != null)
-                {
-                    //TODO: custom prop
-                    //EmitCustomSerializedTypeProp(il, prop, customSerializer.Method, classAttr);
-                    continue;
-                }
-
-                EmitFieldToDocument(il, field, classAttr);
-            }
-
-            il.Emit(OpCodes.Ldloc_0); // stack is [document]
-            il.Emit(OpCodes.Ret);
-
-            //debug only
-            //var t = builder.CreateType();
-            //assemblyBuilder.Save(assemblyName.Name + ".dll");
-            //debug only
-
-
-            return (Func<T, Document>)dm.CreateDelegate(typeof(Func<T, Document>));
-            //return null;
-        }
-
-        // make assembly
-        private static Func<T, Document> xxGetTypeSerializer<T>(Type type)
-        {
-            //debug only
-            var assemblyName = new AssemblyName("SomeName");
-            var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.RunAndSave);
-            var moduleBuilder = assemblyBuilder.DefineDynamicModule(assemblyName.Name, assemblyName.Name + ".dll");
-
-            TypeBuilder builder = moduleBuilder.DefineType("Test", TypeAttributes.Public);
-            var dm = builder.DefineMethod(string.Format("Serialize{0}", Guid.NewGuid()), MethodAttributes.Public | MethodAttributes.Static, DocumentType, new[] { type });
-            //debug only
-
-
-            //var dm = new DynamicMethod(
-            //    string.Format("Serialize{0}", Guid.NewGuid()),
-            //    DocumentType,
-            //    new[] { type },
-            //    true);
-
-            var il = dm.GetILGenerator();
-
-            //TODO: maybe change to allow ALL properties?
-            var properties = GetSettableProps(type);
-            var fields = GetSettableFields(type);
-
-            var classAttr = type.GetCustomAttributes(typeof(LukeMapperAttribute), true).FirstOrDefault() as LukeMapperAttribute ??
-                new LukeMapperAttribute();
-
-            il.DeclareLocal(DocumentType);
-            il.Emit(OpCodes.Newobj, DocumentCtor);
-            il.Emit(OpCodes.Stloc_0); //stack is [document]
-
-
-            var serializers =
-                type.GetMethods()
-                    .Select(method => new
-                    {
-                        Method = method,
-                        SerializerAttribute = (LukeSerializerAttribute)method.GetCustomAttributes(typeof(LukeSerializerAttribute), true).FirstOrDefault()
-                    })
-                    .Where(s => s.SerializerAttribute != null)
-                    .ToList();
-
-
 
             foreach (var prop in properties)
             {
@@ -1003,6 +905,99 @@ namespace LukeMapper
                 EmitFieldToDocument(il, field, classAttr);
             }
 
+            il.Emit(OpCodes.Ldloc_0); // stack is [document]
+            il.Emit(OpCodes.Ret);
+
+            //debug only
+            //var t = builder.CreateType();
+            //assemblyBuilder.Save(assemblyName.Name + ".dll");
+            //debug only
+
+            return (Func<T, Document>)dm.CreateDelegate(typeof(Func<T, Document>));
+            //return null;
+        }
+
+        // make assembly
+        private static Func<T, Document> xxGetTypeSerializer<T>(Type type)
+        {
+            //debug only
+            var assemblyName = new AssemblyName("SomeName");
+            var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.RunAndSave);
+            var moduleBuilder = assemblyBuilder.DefineDynamicModule(assemblyName.Name, assemblyName.Name + ".dll");
+
+            TypeBuilder builder = moduleBuilder.DefineType("Test", TypeAttributes.Public);
+            var dm = builder.DefineMethod(string.Format("Serialize{0}", Guid.NewGuid()), MethodAttributes.Public | MethodAttributes.Static, DocumentType, new[] { type });
+            //debug only
+
+            //var dm = new DynamicMethod(
+            //    string.Format("Serialize{0}", Guid.NewGuid()),
+            //    DocumentType,
+            //    new[] { type },
+            //    true);
+
+            var il = dm.GetILGenerator();
+
+            //TODO: maybe change to allow ALL properties?
+            var properties = GetSettableProps(type);
+            var fields = GetSettableFields(type);
+
+            var classAttr = type.GetCustomAttributes(typeof(LukeMapperAttribute), true).FirstOrDefault() as LukeMapperAttribute ??
+                new LukeMapperAttribute();
+
+            il.DeclareLocal(DocumentType);
+            il.Emit(OpCodes.Newobj, DocumentCtor);
+            il.Emit(OpCodes.Stloc_0); //stack is [document]
+
+            var serializers =
+                type.GetMethods()
+                    .Select(method => new
+                    {
+                        Method = method,
+                        SerializerAttribute = (LukeSerializerAttribute)method.GetCustomAttributes(typeof(LukeSerializerAttribute), true).FirstOrDefault()
+                    })
+                    .Where(s => s.SerializerAttribute != null)
+                    .ToList();
+
+            foreach (var prop in properties)
+            {
+                var delimitedAttr =
+                    (LukeDelimitedAttribute)prop.PropertyInfo.GetCustomAttributes(typeof(LukeDelimitedAttribute), true).FirstOrDefault();
+                if (delimitedAttr != null)
+                {
+                    EmitDelimitedPropOrFieldToDocument(il, delimitedAttr, classAttr, prop: prop);
+                    continue;
+                }
+
+                var customSerializer = serializers.FirstOrDefault(ser => ser.SerializerAttribute.FieldName == prop.Name);
+                if (customSerializer != null)
+                {
+                    EmitCustomSerializedTypeProp(il, prop, customSerializer.Method, classAttr);
+                    continue;
+                }
+
+                EmitPropToDocument(il, prop, classAttr);
+            }
+            foreach (var field in fields)
+            {
+                var delimitedAttr =
+                    (LukeDelimitedAttribute)field.GetCustomAttributes(typeof(LukeDelimitedAttribute), true).FirstOrDefault();
+                if (delimitedAttr != null)
+                {
+                    //TODO:
+                    //EmitDelimitedPropOrFieldToDocument(il, delimitedAttr, classAttr, field: field);
+                    continue;
+                }
+
+                var customSerializer = serializers.FirstOrDefault(ser => ser.SerializerAttribute.FieldName == field.Name);
+                if (customSerializer != null)
+                {
+                    //TODO: custom prop
+                    //EmitCustomSerializedTypeProp(il, prop, customSerializer.Method, classAttr);
+                    continue;
+                }
+
+                EmitFieldToDocument(il, field, classAttr);
+            }
 
             il.Emit(OpCodes.Ldloc_0); // stack is [document]
             il.Emit(OpCodes.Ret);
@@ -1011,7 +1006,6 @@ namespace LukeMapper
             var t = builder.CreateType();
             assemblyBuilder.Save(assemblyName.Name + ".dll");
             //debug only
-
 
             //return (Func<T, Document>)dm.CreateDelegate(typeof(Func<T, Document>));
             return null;
@@ -1024,11 +1018,9 @@ namespace LukeMapper
             var type = prop != null ? prop.PropertyInfo.PropertyType : field != null ? field.FieldType : null;
             if (type == null)
             {
-
                 // no prop OR null specified
                 throw new Exception("argument 'prop' or 'field' is missing");
             }
-
 
             var enumerableType = type.GetInterfaces()
                                      .Where(t => t.IsGenericType)
@@ -1044,8 +1036,7 @@ namespace LukeMapper
 
             if (!SupportedTypes.Contains(innerType.FullName))
             {
-
-                // innerType is not an allowed 
+                // innerType is not an allowed
                 throw new Exception(string.Format("The type `{0}` is not supported for Delimited lists. please use a `CustomDeserializer` method instead.", innerType.FullName));
             }
 
@@ -1089,25 +1080,23 @@ namespace LukeMapper
             if (innerType.FullName == "System.String")
             {
                 il.Emit(OpCodes.Call,
-                        typeof (string).GetMethod("Join", new[] {typeof (string), typeof (IEnumerable<string>)}));
-                    // [document] [field name] [field string value]    
+                        typeof(string).GetMethod("Join", new[] { typeof(string), typeof(IEnumerable<string>) }));
+                // [document] [field name] [field string value]
             }
             else
             {
-                il.Emit(OpCodes.Call, StringGenericJoin.MakeGenericMethod(new[]{innerType})); // [document] [field name] [field string value]
+                il.Emit(OpCodes.Call, StringGenericJoin.MakeGenericMethod(new[] { innerType })); // [document] [field name] [field string value]
             }
-            
 
             il.Emit(OpCodes.Ldsfld, (lukeAttr == null ? classAttr.DefaultStore : lukeAttr.Store).ToFieldInfo()); // [document] [field name] [field string value] [Field.Store]
             il.Emit(OpCodes.Ldsfld, (lukeAttr == null ? classAttr.DefaultIndex : lukeAttr.Index).ToFieldInfo()); // [document] [field name] [field string value] [Field.Store] [Field.Index]
 
             il.Emit(OpCodes.Newobj, FieldCtor); // [document] [Field]
-            il.Emit(OpCodes.Callvirt, DocumentAddField); // [document]
+            //il.Emit(OpCodes.Callvirt, DocumentAddField); // [document]
         }
 
         private static void EmitCustomSerializedTypeProp(ILGenerator il, PropInfo prop, MethodInfo serializer, LukeMapperAttribute classAttr)
         {
-
             var lukeAttr = prop.PropertyInfo.GetCustomAttributes(typeof(LukeAttribute), true).FirstOrDefault() as LukeAttribute;
 
             if ((lukeAttr != null && lukeAttr.Ignore) || (classAttr.IgnoreByDefault && lukeAttr == null))
@@ -1119,26 +1108,18 @@ namespace LukeMapper
             il.Emit(OpCodes.Ldstr, lukeAttr != null && lukeAttr.FieldName != null ? lukeAttr.FieldName : prop.Name);
             il.Emit(OpCodes.Ldarg_0); // [document] [field name] [object]
 
-
-
-
             il.Emit(OpCodes.Callvirt, prop.Getter);
             il.Emit(OpCodes.Call, serializer);
-
-
-
 
             il.Emit(OpCodes.Ldsfld, (lukeAttr == null ? classAttr.DefaultStore : lukeAttr.Store).ToFieldInfo()); // [document] [field name] [field string value] [Field.Store]
             il.Emit(OpCodes.Ldsfld, (lukeAttr == null ? classAttr.DefaultIndex : lukeAttr.Index).ToFieldInfo()); // [document] [field name] [field string value] [Field.Store] [Field.Index]
 
             il.Emit(OpCodes.Newobj, FieldCtor); // [document] [Field]
-            il.Emit(OpCodes.Callvirt, DocumentAddField); // [document]
-
+            //il.Emit(OpCodes.Callvirt, DocumentAddField); // [document]
         }
 
         private static void EmitPropToDocument(ILGenerator il, PropInfo prop, LukeMapperAttribute classAttr)
         {
-
             var nullableType = Nullable.GetUnderlyingType(prop.Type);
             var IsNullableType = (nullableType != null);
             var type = IsNullableType ? nullableType : prop.Type;
@@ -1154,7 +1135,6 @@ namespace LukeMapper
             {
                 return;
             }
-
 
             il.Emit(OpCodes.Ldloc_0); // [document]
             il.Emit(OpCodes.Ldstr, lukeAttr != null && lukeAttr.FieldName != null ? lukeAttr.FieldName : prop.Name);
@@ -1275,12 +1255,11 @@ namespace LukeMapper
                     break;
             }
 
-
             il.Emit(OpCodes.Ldsfld, (lukeAttr == null ? classAttr.DefaultStore : lukeAttr.Store).ToFieldInfo()); // [document] [field name] [field string value] [Field.Store]
             il.Emit(OpCodes.Ldsfld, (lukeAttr == null ? classAttr.DefaultIndex : lukeAttr.Index).ToFieldInfo()); // [document] [field name] [field string value] [Field.Store] [Field.Index]
 
             il.Emit(OpCodes.Newobj, FieldCtor); // [document] [Field]
-            il.Emit(OpCodes.Callvirt, DocumentAddField); // [document]
+            //il.Emit(OpCodes.Callvirt, DocumentAddField); // [document]
         }
 
         private static void EmitFieldToDocument(ILGenerator il, System.Reflection.FieldInfo field, LukeMapperAttribute classAttr)
@@ -1300,7 +1279,6 @@ namespace LukeMapper
             {
                 return;
             }
-
 
             il.Emit(OpCodes.Ldloc_0); // [document]
             il.Emit(OpCodes.Ldstr, lukeAttr != null && lukeAttr.FieldName != null ? lukeAttr.FieldName : field.Name);
@@ -1401,7 +1379,7 @@ namespace LukeMapper
             il.Emit(OpCodes.Ldsfld, (lukeAttr == null ? classAttr.DefaultIndex : lukeAttr.Index).ToFieldInfo()); // [document] [field name] [field string value] [Field.Store] [Field.Index]
 
             il.Emit(OpCodes.Newobj, FieldCtor); // [document] [Field]
-            il.Emit(OpCodes.Callvirt, DocumentAddField); // [document]
+            //il.Emit(OpCodes.Callvirt, DocumentAddField); // [document]
         }
 
         #endregion
@@ -1409,16 +1387,17 @@ namespace LukeMapper
         #region Utility Methods
 
         /// <summary>
-        /// Deserializer function for DateTime.  This can be reimplemented/changed 
+        /// Deserializer function for DateTime.  This can be reimplemented/changed
         /// if you would like DateTimes to be stored a different way in lucene.
-        /// 
-        /// 
+        ///
+        ///
         /// Right now, assumes that Dates are stored in UnixTime format.
-        /// 
+        ///
         /// //TODO: create API for user to override this function
         /// </summary>
         public static DateTime GetDateTime(string val)
         {
+            return DateTools.StringToDate(val);
             long ret;
             return long.TryParse(val, out ret) ? EpochDate.AddSeconds(ret) : DateTime.Now;
         }
@@ -1428,10 +1407,10 @@ namespace LukeMapper
         //Takes a date and returns a UnixTime Timestamp string
         public static string ToDateString(DateTime val)
         {
+            return DateTools.DateToString(val, DateTools.Resolution.SECOND);
             return ((long)((val.ToUniversalTime() - EpochDate).TotalSeconds)).ToString(CultureInfo.InvariantCulture);
         }
-        
-        
+
         /// <summary>
         /// Right now I this is implemented by simply checking if the string is a
         /// "truthy" string.  Seems simple enough.
@@ -1443,8 +1422,8 @@ namespace LukeMapper
 
             return TruthyStrings.Contains(val);
         }
-        private static readonly string[] TruthyStrings = new[] { "True", "1", "true" };
 
+        private static readonly string[] TruthyStrings = new[] { "True", "1", "true" };
 
         /// <summary>
         /// Throws a data exception, only used internally
@@ -1453,26 +1432,23 @@ namespace LukeMapper
         {
             if (document != null && document.GetField(field) != null)
             {
-                throw new DataException(string.Format("Error parsing Field {0} (\"{1}\")", field, document.GetField(field).StringValue()),ex);    
+                throw new DataException(string.Format("Error parsing Field {0} (\"{1}\")", field, document.GetField(field).StringValue), ex);
             }
-            else if(document == null)
+            else if (document == null)
             {
-                throw new DataException("Document is null", ex);    
+                throw new DataException("Document is null", ex);
             }
             else
             {
-                throw new DataException(string.Format("Error parsing Field {0} ([null])", field), ex);    
+                throw new DataException(string.Format("Error parsing Field {0} ([null])", field), ex);
             }
         }
-
-
-
 
         #endregion
 
         #region Reflection
 
-        class PropInfo
+        private class PropInfo
         {
             public string Name { get; set; }
             public MethodInfo Setter { get; set; }
@@ -1481,7 +1457,7 @@ namespace LukeMapper
             public PropertyInfo PropertyInfo { get; set; }
         }
 
-        static List<PropInfo> GetSettableProps(Type t)
+        private static List<PropInfo> GetSettableProps(Type t)
         {
             return t
                   .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
@@ -1499,11 +1475,11 @@ namespace LukeMapper
                   .ToList();
         }
 
-        static List<System.Reflection.FieldInfo> GetSettableFields(Type t)
+        private static List<System.Reflection.FieldInfo> GetSettableFields(Type t)
         {
             return t
                 .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-                .Where(f=>!f.Name.Contains("__BackingField")) //prevents backing fields from being included
+                .Where(f => !f.Name.Contains("__BackingField")) //prevents backing fields from being included
                 .ToList();
         }
 
@@ -1511,7 +1487,6 @@ namespace LukeMapper
                                         Type[] parameterTypes, out MethodInfo methodInfo,
                                         out ParameterInfo[] parameters)
         {
-
             methodInfo = null;
             parameters = null;
 
@@ -1523,7 +1498,7 @@ namespace LukeMapper
             }
             else
             {
-                // Method is probably overloaded. As far as I know there's no other way 
+                // Method is probably overloaded. As far as I know there's no other way
                 // to get the MethodInfo instance, we have to
                 // search for it in all the type methods
                 MethodInfo[] methods = type.GetMethods(BindingFlags.Public | BindingFlags.Instance);
@@ -1560,27 +1535,29 @@ namespace LukeMapper
             }
         }
 
-
         #endregion
 
         #region Public Endpoints
 
-        public static IEnumerable<T> Query<T>(
-            this IndexSearcher searcher, 
-            Query query, 
+        public static LukeSearchResult<T> Query<T>(
+            this IndexSearcher searcher,
+            Query query,
             int n /*, Sort sort*/)
         {
-            var identity = new Identity(searcher,query,typeof(T));
+            var identity = new Identity(searcher, query, typeof(T));
             var info = GetDeserializerCacheInfo(identity);
-
 
             //****: create lambda to generate deserializer method, then cache it
             //****: we do this here in case the underlying schema has changed we can regenerate...
             TopDocs td = searcher.Search(query, n);
 
+            LukeSearchResult<T> result = new LukeSearchResult<T>();
+            result.TotalHits = td.TotalHits;
+
             if (td.TotalHits == 0)
             {
-                yield break;
+                result.Results = Enumerable.Empty<T>();
+                return result;
             }
 
             Func<Func<Document, object>> cacheDeserializer = () =>
@@ -1601,12 +1578,13 @@ namespace LukeMapper
 
             var deserializer = info.Deserializer;
 
-            foreach(var document in td.ScoreDocs.Select(sd=>searcher.Doc(sd.doc)))
+            List<T> items = new List<T>();
+            foreach (var document in td.ScoreDocs.Select(sd => searcher.Doc(sd.Doc)))
             {
                 object next;
                 try
                 {
-                next = deserializer(document);
+                    next = deserializer(document);
                 }
                 catch (DataException)
                 {
@@ -1614,21 +1592,21 @@ namespace LukeMapper
                     deserializer = cacheDeserializer();
                     next = deserializer(document);
                 }
-                yield return (T)next;
+                items.Add((T)next);
             }
+            result.Results = items;
+            return result;
         }
 
-        public static IEnumerable<dynamic> Query(this IndexSearcher searcher, Query query, int n)
-        {
-            return searcher.Query<FastExpando>(query, n);
-        }
-
+        //public static IEnumerable<dynamic> Query(this IndexSearcher searcher, Query query, int n)
+        //{
+        //    return searcher.Query<FastExpando>(query, n);
+        //}
 
         public static void Write<T>(this IndexWriter writer, IEnumerable<T> entities, Analyzer analyzer)
         {
             var identity = new Identity(typeof(T));
             var info = GetSerializerCacheInfo<T>(identity);
-
 
             //****: create lambda to generate deserializer method, then cache it
             //****: we do this here in case the underlying schema has changed we can regenerate...
@@ -1652,9 +1630,7 @@ namespace LukeMapper
             {
                 writer.AddDocument(serializer(entity));
             }
-
         }
-
 
         #endregion
     }

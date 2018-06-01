@@ -35,7 +35,6 @@ namespace LukeMapperTests
             doc.Add(new Field("PropNullLong", poco.PropNullLong.ToString(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
             doc.Add(new Field("NullLong", poco.NullLong.ToString(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
 
-
             doc.Add(new Field("Dt", LukeMapper.LukeMapper.ToDateString(poco.Dt), Field.Store.YES,
                               Field.Index.NOT_ANALYZED_NO_NORMS));
             doc.Add(new Field("PropDt", LukeMapper.LukeMapper.ToDateString(poco.PropDt), Field.Store.YES,
@@ -72,7 +71,6 @@ namespace LukeMapperTests
 
             // set up test index
 
-
             // clear index
             IndexManager.Of(Index).DeleteAll();
 
@@ -83,19 +81,16 @@ namespace LukeMapperTests
         [TestMethod]
         public void TestMethod1()
         {
-
             foreach (var expected in TestObjects)
             {
                 var query = new TermQuery(new Term("Id", expected.Id.ToString()));
-                var results = IndexManager.Of(Index).Query<PocoObject>(query, 1).ToList();
+                var results = IndexManager.Of(Index).Query<PocoObject>(query, 1).Results.ToList();
 
                 Assert.AreEqual(1, results.Count, "Returns only one object");
 
                 var actual = results.SingleOrDefault();
 
-
                 Assert.IsNotNull(actual, "Non-Null Result Returned");
-
 
                 Assert.AreEqual(expected.Id, actual.Id, "Int32 Field");
                 Assert.AreEqual(expected.PropId, actual.PropId, "Int32 Property");
@@ -116,7 +111,7 @@ namespace LukeMapperTests
                 Assert.AreEqual(expected.PropCh, actual.PropCh, "Character Property");
 
                 Assert.AreEqual(expected.Bl, actual.Bl, "Boolean Field");
-                Assert.AreEqual(expected.PropBl, actual.PropBl,"Boolean Property");
+                Assert.AreEqual(expected.PropBl, actual.PropBl, "Boolean Property");
 
                 AssertDatesEqual(expected.Dt, actual.Dt, "DateTime Field");
                 AssertDatesEqual(expected.PropDt, actual.PropDt, "DateTime Property");
@@ -135,6 +130,5 @@ namespace LukeMapperTests
             Assert.AreEqual(a.Minute, b.Minute, message);
             Assert.AreEqual(a.Second, b.Second, message);
         }
-
     }
 }

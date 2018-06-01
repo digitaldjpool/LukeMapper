@@ -12,32 +12,33 @@ using Lucene.Net.Index;
 using Lucene.Net.Search;
 using Lucene.Net.Store;
 using Version = Lucene.Net.Util.Version;
+using LukeMapper;
 
 namespace LukeMapper.Benchmarks
 {
-    class Program
+    internal class Program
     {
         private const int ObjectCount = 500;
         private const int IteratorCount = 20;
+
         private static IndexWriter GetWriter()
         {
             var dir = FSDirectory.Open(new DirectoryInfo(@"E:\code\LukeMapper\_indexes\test-index"));
 
-            return new IndexWriter(dir, 
-                new StandardAnalyzer(Version.LUCENE_29), 
-                !IndexReader.IndexExists(dir), 
+            return new IndexWriter(dir,
+                new StandardAnalyzer(Version.LUCENE_29),
+                !IndexReader.IndexExists(dir),
                 IndexWriter.MaxFieldLength.UNLIMITED);
         }
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-
             // Initialize Everything
             // ----------------------------------------------------------------
             var watch = new Stopwatch();
             var writer = GetWriter();
             var analyzer = new StandardAnalyzer(Version.LUCENE_29);
-            
+
             var query = new TermQuery(new Term("PropString", "teststring"));
             int iteratorCount;
             IndexReader reader;
@@ -47,7 +48,6 @@ namespace LukeMapper.Benchmarks
             List<Document> documentResults;
             List<long> Times = new List<long>();
 
-
             // Create Test Objects
             // ----------------------------------------------------------------
             testObjects = new List<TestClass1>();
@@ -56,8 +56,6 @@ namespace LukeMapper.Benchmarks
             {
                 testObjects.Add(new TestClass1(i));
             }
-
-
 
             // Test speed of writes
             // ----------------------------------------------------------------
@@ -84,10 +82,6 @@ namespace LukeMapper.Benchmarks
             reader = writer.GetReader();
             searcher = new IndexSearcher(reader);
 
-
-
-
-
             // Test speed of reads
             // ----------------------------------------------------------------
             iteratorCount = IteratorCount;
@@ -95,10 +89,10 @@ namespace LukeMapper.Benchmarks
             {
                 watch.Reset();
                 watch.Start();
-                objectResults = searcher.Query<TestClass1>(query, ObjectCount).ToList();
+                objectResults = searcher.Query<TestClass1>(query, ObjectCount).Results.ToList();
                 watch.Stop();
                 Times.Add(watch.ElapsedMilliseconds);
-                //Console.WriteLine("{0} Objects Read in {1}ms and {2:#,#} ticks", objectResults.Count, watch.ElapsedMilliseconds, watch.ElapsedTicks);    
+                //Console.WriteLine("{0} Objects Read in {1}ms and {2:#,#} ticks", objectResults.Count, watch.ElapsedMilliseconds, watch.ElapsedTicks);
             }
 
             Console.WriteLine("First Read: {0}ms", Times[0]);
@@ -108,9 +102,7 @@ namespace LukeMapper.Benchmarks
             // delete all
             writer.DeleteAll();
 
-
             Console.WriteLine("-------------- Native Lucene Methods ---------------");
-
 
             watch.Reset();
             watch.Start();
@@ -140,7 +132,7 @@ namespace LukeMapper.Benchmarks
                 watch.Reset();
                 watch.Start();
                 documentResults =
-                    searcher.Search(query, ObjectCount).ScoreDocs.Select(sd => reader.Document(sd.doc)).ToList();
+                    searcher.Search(query, ObjectCount).ScoreDocs.Select(sd => reader.Document(sd.Doc)).ToList();
                 watch.Stop();
                 Times.Add(watch.ElapsedMilliseconds);
             }
@@ -152,10 +144,8 @@ namespace LukeMapper.Benchmarks
             // delete all
             writer.DeleteAll();
 
-
             Console.ReadLine();
         }
-
     }
 
     public class TestClass1
@@ -166,7 +156,10 @@ namespace LukeMapper.Benchmarks
         //public DateTime DateTime { get; set; }
         //public int? NullId { get; set; }
 
-        public TestClass1(){}
+        public TestClass1()
+        {
+        }
+
         public TestClass1(int i)
         {
             Id = i;

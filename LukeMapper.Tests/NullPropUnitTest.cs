@@ -32,7 +32,7 @@ namespace LukeMapperTests
 
         public static void TestPropNullInt(int? nullInt)
         {
-            var obj = new NullPropClass {PropNullInt = nullInt};
+            var obj = new NullPropClass { PropNullInt = nullInt };
 
             var guid = Guid.NewGuid().ToString();
 
@@ -41,14 +41,14 @@ namespace LukeMapperTests
             doc.Add(new Field("Identifier", guid, Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
             doc.Add(new Field("PropNullInt", obj.PropNullInt.ToString(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
 
-            IndexManager.Of(Index).Write(new List<Document>{doc});
+            IndexManager.Of(Index).Write(new List<Document> { doc });
 
             var query = new TermQuery(new Term("Identifier", guid));
-            var actual = IndexManager.Of(Index).Query<NullPropClass>(query, 1).SingleOrDefault();
+            var actual = IndexManager.Of(Index).Query<NullPropClass>(query, 1).Results.SingleOrDefault();
 
             Assert.IsNotNull(actual, "Non-Null Result Returned");
 
-            Assert.AreEqual(actual.PropNullInt.GetValueOrDefault(),obj.PropNullInt.GetValueOrDefault());
+            Assert.AreEqual(actual.PropNullInt.GetValueOrDefault(), obj.PropNullInt.GetValueOrDefault());
 
             Assert.AreEqual(actual.PropNullInt.HasValue, obj.PropNullInt.HasValue);
         }

@@ -28,7 +28,7 @@ namespace LukeMapper
             switch (store)
             {
                 case Store.NO: return Field.Store.NO;
-                case Store.COMPRESS: return Field.Store.COMPRESS;
+                //case Store.COMPRESS: return Field.Store.COMPRESS;
                 default: return Field.Store.YES;
             }
         }
@@ -38,7 +38,7 @@ namespace LukeMapper
             switch (store)
             {
                 case Store.NO: return typeof(Field.Store).GetField("NO");
-                case Store.COMPRESS: return typeof(Field.Store).GetField("COMPRESS");
+                //case Store.COMPRESS: return typeof(Field.Store).GetField("COMPRESS");
                 default: return typeof(Field.Store).GetField("YES");
             }
         }
@@ -67,5 +67,4 @@ namespace LukeMapper
             }
         }
     }
-
 }

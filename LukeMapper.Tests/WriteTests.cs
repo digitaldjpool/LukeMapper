@@ -26,31 +26,31 @@ namespace LukeMapperTests
         public void WriteNoAttributes()
         {
             var expected = new TestWriteClass
-                {
-                    Int = 23,
-                    PropInt = 32,
-                    NullInt = 22,
-                    PropNullInt = 33,
-                    String = "testing 123",
-                    PropString = "testing yet again",
-                    Char = 'a',
-                    PropChar = 'b',
-                    //NullChar = 'c',
-                    //PropNullChar = 'd',
-                    Dt = DateTime.UtcNow.AddDays(-31),
-                    PropDt = DateTime.UtcNow.AddYears(-2).AddDays(-7),
-                    NullDt = DateTime.UtcNow.AddDays(-31),
-                    PropNullDt = DateTime.UtcNow.AddHours(-22),
-                    Bl = true,
-                    PropBl = true,
-                    PropNullBl = true,
-                    NullBl = true
-                };
+            {
+                Int = 23,
+                PropInt = 32,
+                NullInt = 22,
+                PropNullInt = 33,
+                String = "testing 123",
+                PropString = "testing yet again",
+                Char = 'a',
+                PropChar = 'b',
+                //NullChar = 'c',
+                //PropNullChar = 'd',
+                Dt = DateTime.UtcNow.AddDays(-31),
+                PropDt = DateTime.UtcNow.AddYears(-2).AddDays(-7),
+                NullDt = DateTime.UtcNow.AddDays(-31),
+                PropNullDt = DateTime.UtcNow.AddHours(-22),
+                Bl = true,
+                PropBl = true,
+                PropNullBl = true,
+                NullBl = true
+            };
 
-            IndexManager.Of(Index).Write(new List<TestWriteClass>{expected});
+            IndexManager.Of(Index).Write(new List<TestWriteClass> { expected });
 
             var query = new TermQuery(new Term("Int", expected.Int.ToString()));
-            var actual = IndexManager.Of(Index).Query<TestWriteClass>(query, 1).SingleOrDefault();
+            var actual = IndexManager.Of(Index).Query<TestWriteClass>(query, 1).Results.SingleOrDefault();
 
             Assert.IsNotNull(actual, "Returns only one object");
 
@@ -67,33 +67,29 @@ namespace LukeMapperTests
             Assert.AreEqual(actual.PropNullDt.HasValue, expected.PropNullDt.HasValue);
 
             Assert.AreEqual(actual.PropNullDt.Value.Day, expected.PropNullDt.Value.Day);
-
-
         }
 
         [TestMethod]
         public void WriteWithCustomSerializer()
         {
-
             IndexManager.Of(Index).DeleteAll();
 
             var expected = new TestCustomSerializerClass
-                {
-                    Id = 23,
-                    CustomList = new List<string> {"abc", "def", "ghi"}
-                };
+            {
+                Id = 23,
+                CustomList = new List<string> { "abc", "def", "ghi" }
+            };
 
             IndexManager.Of(Index).Write(new List<TestCustomSerializerClass> { expected });
 
             var query = new TermQuery(new Term("Id", expected.Id.ToString()));
-            var actual = IndexManager.Of(Index).Query<TestCustomSerializerClass>(query, 1).SingleOrDefault();
+            var actual = IndexManager.Of(Index).Query<TestCustomSerializerClass>(query, 1).Results.SingleOrDefault();
 
             Assert.IsNotNull(actual, "Returns only one object");
-            
+
             Assert.IsNotNull(actual.CustomList);
 
             Assert.AreEqual(expected.CustomList.Count, actual.CustomList.Count);
-
         }
     }
 
@@ -101,14 +97,14 @@ namespace LukeMapperTests
     {
         public int Id { get; set; }
 
-
-        public List<string> CustomList { get; set; } 
+        public List<string> CustomList { get; set; }
 
         [LukeSerializer("CustomList")]
         public static string CustomListToString(List<string> list)
         {
             return string.Join(",", list);
         }
+
         [LukeDeserializer("CustomList")]
         public static List<string> StringToCustomList(string serialized)
         {
@@ -126,6 +122,7 @@ namespace LukeMapperTests
 
         [Luke(FieldName = "_Different")]
         public string String;
+
         public string PropString { get; set; }
 
         public char Char;
