@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>LukeMapper</id>
+    <title>LukeMapper</title>
+    <version>0.0.0</version>
+    <authors>leland richardson</authors>
+    <owners>leland richardson</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <summary>LukeMapper</summary>
+    <description>Lucene Mapper... like Dapper</description>
+    <copyright>Copyright 2013 Leland M. Richardson</copyright>
+    <projectUrl>https://github.com/lelandrichardson/LukeMapper</projectUrl>
+    <licenseUrl>https://github.com/lelandrichardson/LukeMapper/blob/master/LICENSE</licenseUrl>
+    <iconUrl>https://github.com/lelandrichardson/LukeMapper</iconUrl>
+    <releaseNotes></releaseNotes>
+    <language>en-US</language>
+    <tags></tags>
+     <dependencies>
+      <dependency id="Lucene.Net" version="3.0.3" />
+    </dependencies>
+  </metadata>
+</package>
