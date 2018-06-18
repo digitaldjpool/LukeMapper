@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using Lucene.Net.Documents;
 using Lucene.Net.Index;
@@ -119,6 +120,17 @@ namespace LukeMapperTests
                 AssertDatesEqual(expected.NullDt.GetValueOrDefault(), actual.NullDt.GetValueOrDefault(), "Nullable DateTime");
                 AssertDatesEqual(expected.NullPropDt.GetValueOrDefault(), actual.NullPropDt.GetValueOrDefault(), "Nullable DateTime Property");
             }
+        }
+
+        [TestMethod]
+        public void TestMethod2()
+        {
+            var query = new TermRangeQuery("Id", "1", "6", true, true);
+            var sort = new Sort(new SortField("Id", SortField.INT, true));
+            var results = IndexManager.Of(Index).Query<PocoObject>(query, TestObjects.Count, sort).Results.ToList();
+
+            Assert.AreEqual(TestObjects.Count, results.Count, "Returns all objects");
+            CollectionAssert.AreEqual(TestObjects.Select(o => o.Id).OrderByDescending(o => o).ToList(), results.Select(o => o.Id).ToList());
         }
 
         private void AssertDatesEqual(DateTime a, DateTime b, string message = null)

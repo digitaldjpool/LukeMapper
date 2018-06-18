@@ -1598,6 +1598,65 @@ namespace LukeMapper
             return result;
         }
 
+        public static LukeSearchResult<T> Query<T>(
+            this IndexSearcher searcher,
+            Query query,
+            int n, Sort sort)
+        {
+            var identity = new Identity(searcher, query, typeof(T));
+            var info = GetDeserializerCacheInfo(identity);
+
+            //****: create lambda to generate deserializer method, then cache it
+            //****: we do this here in case the underlying schema has changed we can regenerate...
+            TopFieldDocs td = searcher.Search(query, null, n, sort);
+
+            LukeSearchResult<T> result = new LukeSearchResult<T>();
+            result.TotalHits = td.TotalHits;
+
+            if (td.TotalHits == 0)
+            {
+                result.Results = Enumerable.Empty<T>();
+                return result;
+            }
+
+            Func<Func<Document, object>> cacheDeserializer = () =>
+                    {
+                        info.Deserializer = GetDeserializer(typeof(T), searcher);
+                        SetQueryCache(identity, info);
+                        return info.Deserializer;
+                    };
+
+            //****: check info for deserializer, if null => run it.
+
+            if (info.Deserializer == null)
+            {
+                cacheDeserializer();
+            }
+
+            //yield break;
+
+            var deserializer = info.Deserializer;
+
+            List<T> items = new List<T>();
+            foreach (var document in td.ScoreDocs.Select(sd => searcher.Doc(sd.Doc)))
+            {
+                object next;
+                try
+                {
+                    next = deserializer(document);
+                }
+                catch (DataException)
+                {
+                    // give it another shot, in case the underlying schema changed
+                    deserializer = cacheDeserializer();
+                    next = deserializer(document);
+                }
+                items.Add((T)next);
+            }
+            result.Results = items;
+            return result;
+        }
+
         //public static IEnumerable<dynamic> Query(this IndexSearcher searcher, Query query, int n)
         //{
         //    return searcher.Query<FastExpando>(query, n);

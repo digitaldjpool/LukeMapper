@@ -147,6 +147,33 @@ namespace LukeMapper
                 return results;
             }
 
+            public LukeSearchResult<T> Query<T>(Query query, int n, Sort sort)
+            {
+                lock (syncRoot)
+                {
+                    if (_searcher != null && !_searcher.IndexReader.IsCurrent() && _activeSearches == 0)
+                    {
+                        _searcher.Dispose();
+                        _searcher = null;
+                    }
+                    if (_searcher == null)
+                    {
+                        _searcher = new IndexSearcher((_writer ?? (_writer = CreateWriter(indexName))).GetReader());
+                    }
+                }
+                LukeSearchResult<T> results;
+                Interlocked.Increment(ref _activeSearches);
+                try
+                {
+                    results = _searcher.Query<T>(query, n, sort);
+                }
+                finally
+                {
+                    Interlocked.Decrement(ref _activeSearches);
+                }
+                return results;
+            }
+
             public void Write<T>(IEnumerable<T> entities)
             {
                 lock (syncRoot)
