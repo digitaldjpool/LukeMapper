@@ -54,7 +54,7 @@
     <Compile Include="Identity.cs" />
     <Compile Include="LukeMapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Content Include="README.md" />
+    <None Include="README.md" />
     <None Include="LukeMapper.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>
