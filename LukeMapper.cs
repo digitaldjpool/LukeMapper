@@ -44,6 +44,7 @@ namespace LukeMapper
                 "System.Int64",
                 "System.Boolean",
                 "System.DateTime",
+                "System.Guid",
                 "System.Char"
             };
 
@@ -59,6 +60,7 @@ namespace LukeMapper
         private static readonly MethodInfo LongTryParse = typeof(Int64).GetMethod("TryParse", new[] { typeof(string), typeof(long).MakeByRefType() });
         private static readonly MethodInfo IsNullOrEmpty = typeof(String).GetMethod("IsNullOrEmpty", new[] { typeof(string) });
         private static readonly MethodInfo LukeMapperGetDateTime = typeof(LukeMapper).GetMethod("GetDateTime");
+        private static readonly MethodInfo LukeMapperGetGuid = typeof(LukeMapper).GetMethod("GetGuid");
         private static readonly MethodInfo LukeMapperGetBoolean = typeof(LukeMapper).GetMethod("GetBoolean");
         private static readonly MethodInfo StringGetChars = typeof(String).GetMethod("get_Chars");
         private static readonly MethodInfo StringSplit = typeof(string).GetMethod("Split", new[] { typeof(string[]), typeof(StringSplitOptions) });
@@ -74,6 +76,8 @@ namespace LukeMapper
 
         //private static readonly MethodInfo DocumentAddField = typeof(Document).GetMethod("Add", new[] { typeof(Fieldable) });
         private static readonly MethodInfo LukeMapperToDateString = typeof(LukeMapper).GetMethod("ToDateString");
+
+        private static readonly MethodInfo LukeMapperToGuidString = typeof(LukeMapper).GetMethod("ToGuidString");
 
         private static readonly MethodInfo StringGenericJoin = typeof(string)
             .GetMethods()
@@ -697,6 +701,15 @@ namespace LukeMapper
                     il.Emit(OpCodes.Stfld, field);
                     break;
 
+                case "System.Guid":
+                    il.Emit(OpCodes.Ldloc_0);// [target]
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldstr, name); // [target] [string]
+                    il.Emit(OpCodes.Callvirt, GetFieldValue);
+                    il.Emit(OpCodes.Call, LukeMapperGetGuid);
+                    il.Emit(OpCodes.Stfld, field);
+                    break;
+
                 case "System.Char":
                     il.Emit(OpCodes.Ldarg_0);
                     il.Emit(OpCodes.Ldstr, name);
@@ -783,6 +796,15 @@ namespace LukeMapper
                     il.Emit(OpCodes.Ldstr, name); // [target] [string]
                     il.Emit(OpCodes.Callvirt, GetFieldValue);
                     il.Emit(OpCodes.Call, LukeMapperGetDateTime);
+                    il.Emit(OpCodes.Callvirt, prop.Setter);
+                    break;
+
+                case "System.Guid":
+                    il.Emit(OpCodes.Ldloc_0);// [target]
+                    il.Emit(OpCodes.Ldarg_0);
+                    il.Emit(OpCodes.Ldstr, name); // [target] [string]
+                    il.Emit(OpCodes.Callvirt, GetFieldValue);
+                    il.Emit(OpCodes.Call, LukeMapperGetGuid);
                     il.Emit(OpCodes.Callvirt, prop.Setter);
                     break;
 
@@ -1235,6 +1257,11 @@ namespace LukeMapper
                     }
                     break;
 
+                case "System.Guid":
+                    il.Emit(OpCodes.Callvirt, prop.Getter);
+                    il.Emit(OpCodes.Call, LukeMapperToGuidString);
+                    break;
+
                 case "System.Char":
                     var lb4 = il.DeclareLocal(prop.Type);
 
@@ -1359,6 +1386,11 @@ namespace LukeMapper
                     }
                     break;
 
+                case "System.Guid":
+                    il.Emit(OpCodes.Ldfld, field);
+                    il.Emit(OpCodes.Call, LukeMapperToGuidString);
+                    break;
+
                 case "System.Char":
                     il.Emit(OpCodes.Ldflda, field);
                     if (IsNullableType)
@@ -1402,6 +1434,16 @@ namespace LukeMapper
             return long.TryParse(val, out ret) ? EpochDate.AddSeconds(ret) : DateTime.Now;
         }
 
+        public static Guid GetGuid(string val)
+        {
+            Guid g = Guid.Empty;
+            if (Guid.TryParse(val, out g))
+            {
+                return g;
+            }
+            return Guid.Empty;
+        }
+
         private static readonly DateTime EpochDate = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
         //Takes a date and returns a UnixTime Timestamp string
@@ -1409,6 +1451,11 @@ namespace LukeMapper
         {
             return DateTools.DateToString(val, DateTools.Resolution.SECOND);
             return ((long)((val.ToUniversalTime() - EpochDate).TotalSeconds)).ToString(CultureInfo.InvariantCulture);
+        }
+
+        public static string ToGuidString(Guid val)
+        {
+            return val.ToString("N");
         }
 
         /// <summary>

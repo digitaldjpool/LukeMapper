@@ -10,41 +10,42 @@ namespace LukeMapperTests
 {
     public class PocoObject
     {
-
         // creates a generally random PocoObject, with specified id
         public static PocoObject Random(int id)
         {
             var random = new Random();
 
             return new PocoObject
-                {
-                    Id = id,
-                    PropId = random.Next(),
-                    NullId = random.Next(2) == 1 ? (int?)null : (int?) random.Next(20),
-                    PropNullId = random.Next(2) == 1 ? (int?)null : (int?)random.Next(20),
+            {
+                Id = id,
+                PropId = random.Next(),
+                NullId = random.Next(2) == 1 ? (int?)null : (int?)random.Next(20),
+                PropNullId = random.Next(2) == 1 ? (int?)null : (int?)random.Next(20),
 
-                    Long = id,
-                    PropLong = random.Next(),
-                    NullLong = random.Next(2) == 1 ? (long?)null : (long?)random.Next(20),
-                    PropNullLong = random.Next(2) == 1 ? (long?)null : (long?)random.Next(20),
+                Long = id,
+                PropLong = random.Next(),
+                NullLong = random.Next(2) == 1 ? (long?)null : (long?)random.Next(20),
+                PropNullLong = random.Next(2) == 1 ? (long?)null : (long?)random.Next(20),
 
-                    DisplayText = Path.GetRandomFileName(),
-                    PropDisplayText = Path.GetRandomFileName(),
+                DisplayText = Path.GetRandomFileName(),
+                PropDisplayText = Path.GetRandomFileName(),
 
-                    Ch = (char) random.Next(65, 122),
-                    PropCh = (char) random.Next(65, 122),
+                Ch = (char)random.Next(65, 122),
+                PropCh = (char)random.Next(65, 122),
 
-                    Bl = random.Next(2) == 1,
-                    PropBl = random.Next(2) == 1,
-                    NullBl = random.Next(2) == 1 ? random.Next(2) == 1 : (bool?)null,
-                    PropNullBl = random.Next(2) == 1 ? random.Next(2) == 1 : (bool?)null,
+                Bl = random.Next(2) == 1,
+                PropBl = random.Next(2) == 1,
+                NullBl = random.Next(2) == 1 ? random.Next(2) == 1 : (bool?)null,
+                PropNullBl = random.Next(2) == 1 ? random.Next(2) == 1 : (bool?)null,
 
-                    Dt = DateTime.UtcNow.AddSeconds(-1*random.Next(999999)),
-                    PropDt = DateTime.UtcNow.AddSeconds(-1*random.Next(999999)),
-                    NullDt = random.Next(2) == 1 ? (DateTime?) DateTime.UtcNow.AddSeconds(-1*random.Next(999999)) : null,
-                    NullPropDt =
-                        random.Next(2) == 1 ? (DateTime?) DateTime.UtcNow.AddSeconds(-1*random.Next(999999)) : null
-                };
+                Dt = DateTime.UtcNow.AddSeconds(-1 * random.Next(999999)),
+                PropDt = DateTime.UtcNow.AddSeconds(-1 * random.Next(999999)),
+                NullDt = random.Next(2) == 1 ? (DateTime?)DateTime.UtcNow.AddSeconds(-1 * random.Next(999999)) : null,
+                NullPropDt =
+                        random.Next(2) == 1 ? (DateTime?)DateTime.UtcNow.AddSeconds(-1 * random.Next(999999)) : null,
+
+                PropGuid = new Guid("9788127c-5547-4c69-8fdc-a36869688957")
+            };
         }
 
         public int Id;
@@ -76,6 +77,6 @@ namespace LukeMapperTests
 
         public DateTime? NullDt;
         public DateTime? NullPropDt { get; set; }
-
+        public Guid PropGuid { get; private set; }
     }
 }

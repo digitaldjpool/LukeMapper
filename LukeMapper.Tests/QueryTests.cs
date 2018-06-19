@@ -52,7 +52,7 @@ namespace LukeMapperTests
             doc.Add(new Field("PropBl", poco.PropBl.ToString(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
             doc.Add(new Field("Ch", poco.Ch.ToString(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
             doc.Add(new Field("PropCh", poco.PropCh.ToString(), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
-
+            doc.Add(new Field("PropGuid", poco.PropGuid.ToString("N"), Field.Store.YES, Field.Index.NOT_ANALYZED_NO_NORMS));
             return doc;
         }
 
@@ -119,6 +119,8 @@ namespace LukeMapperTests
 
                 AssertDatesEqual(expected.NullDt.GetValueOrDefault(), actual.NullDt.GetValueOrDefault(), "Nullable DateTime");
                 AssertDatesEqual(expected.NullPropDt.GetValueOrDefault(), actual.NullPropDt.GetValueOrDefault(), "Nullable DateTime Property");
+
+                Assert.AreEqual(expected.PropGuid, actual.PropGuid, "Guid Property");
             }
         }
 
