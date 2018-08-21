@@ -73,10 +73,31 @@ namespace LukeMapperTests
             // set up test index
 
             // clear index
-            IndexManager.Of(Index).DeleteAll();
+            // IndexManager.Of(Index).DeleteAll();
 
             //write documents to test in
             IndexManager.Of(Index).Write(TestObjects.Select(MapPocoToDocument));
+
+            for (int i = 0; i < 100; i++)
+            {
+                dynamic d = new
+                {
+                    Id = i,
+                    PropGuid = new Guid("11111111-2222-4c69-8fdc-a36869688957")
+                };
+                IndexManager.Of("test-index2").Write<dynamic>(new[] { d });
+            }
+        }
+
+        [TestMethod]
+        public void dynamicTest()
+        {
+            var query = new TermQuery(new Term("Id", "987651"));
+            var results = IndexManager.Of(Index).Query<dynamic>(query, 1).Results.ToList();
+            Assert.AreEqual(1, results.Count, "Returns only one object");
+
+            var actual = results.SingleOrDefault();
+            Assert.AreEqual(new Guid("11111111-2222-4c69-8fdc-a36869688957"), actual.PropGuid, "Guid Property");
         }
 
         [TestMethod]
